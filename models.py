@@ -22,10 +22,6 @@ class User(db.Model):
     image_url = db.Column(db.String(500),default="/static/images/default-pic.png")
     password = db.Column(db.String(128), nullable=False)
     
-    favorite_verses = db.relationship('FavoriteVerse', backref='user', cascade="all, delete")
-    shared_verses = db.relationship('SharedVerse', backref='user', cascade="all, delete")
-    categories = db.relationship('Category', backref='user', cascade="all, delete")
-    
     def __repr__(self):
         user = self
         return f"<User id={user.id} username={user.username} email={user.email}>"
@@ -68,41 +64,7 @@ class User(db.Model):
                 return user
 
         return False
-
-class FavoriteVerse(db.Model):
-    """Favorite verse model"""
     
-    __tablename__ = "favorite_verses"
-    
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="cascade"))
-    bible_id = db.Column(db.String(50), nullable=False)
-    verse_id = db.Column(db.String(50), nullable=False)
-    category = db.Column(db.String(50))
-    note = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        favorite_verse = self
-        return f"<FavoriteVerse id={favorite_verse.id} user_id={favorite_verse.user_id} bible_id={favorite_verse.bible_id} verse_id={favorite_verse.verse_id}>"
-
-class Devotional(db.Model):
-    """Devotional model"""
-    
-    __tablename__ = "devotionals"
-    
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="cascade"))
-    title = db.Column(db.String(100), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    date = db.Column(db.Date, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    def __repr__(self):
-        devotional = self
-        return f"<Devotional id={devotional.id} title={devotional.title} date={devotional.date}>"
-
 class Category(db.Model):
     """Category model"""
     
@@ -112,11 +74,65 @@ class Category(db.Model):
     name = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="cascade"))
     
-    favorite_verses = db.relationship('FavoriteVerse', backref='category', cascade="all, delete")
+    # favorite_verses = db.relationship('FavoriteVerse', backref='categoriy', cascade="all, delete")
     
     def __repr__(self):
         category = self
         return f"<Category id={category.id} name={category.name}>"
+
+class FavoriteVerse(db.Model):
+    """Favorite verse model"""
+    
+    __tablename__ = "favorite_verses"
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    bible_id = db.Column(db.String(50), nullable=False)
+    book_id = db.Column(db.String(50), nullable=False)
+    chapter_id = db.Column(db.String(50), nullable=False)
+    verse_start_id = db.Column(db.String(50), nullable=False)
+    verse_end_id = db.Column(db.String(50), nullable=False)
+    note = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+   
+    # Creates relationship between user and favorite verses
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="cascade"))
+    
+    users = db.relationship('User', backref='favoriteVerse', cascade="all, delete")
+    
+    # Creates relationship between favorite verses and categories
+    categories = db.Column(db.Integer, db.ForeignKey('categories.id', ondelete="cascade"))
+    
+    categories = db.relationship('Category', backref='verse', cascade="all, delete")
+    
+    def __repr__(self):
+        favorite_verse = self
+        return f"<FavoriteVerse id={favorite_verse.id} user_id={favorite_verse.user_id} bible_id={favorite_verse.bible_id} verse_id={favorite_verse.verse_id}>" 
+
+class Devotional(db.Model):
+    """Devotional model"""
+    
+    __tablename__ = "devotionals"
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Creates relationship between user and devotionals
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="cascade"))
+    
+    users = db.relationship('User', backref='devotional', cascade="all, delete")
+    
+    # Creates relationship between devotionals and categories
+    categories = db.Column(db.Integer, db.ForeignKey('categories.id', ondelete="cascade"))
+    
+    categories = db.relationship('Category', backref='devotional', cascade="all, delete")
+    
+    def __repr__(self):
+        devotional = self
+        return f"<Devotional id={devotional.id} title={devotional.title} date={devotional.date}>"
 
 class Study(db.Model):
     """Study model"""
@@ -128,6 +144,9 @@ class Study(db.Model):
     title = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=False)
     link_to_document = db.Column(db.String(200))  # Optional link to external document
+    category = db.Column(db.Integer, db.ForeignKey('categories.id', ondelete="cascade"))
     
     def __repr__(self):
+        
+        
         return f"<Study id={self.id} user_id={self.user_id} title={self.title}>"

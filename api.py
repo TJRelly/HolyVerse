@@ -25,3 +25,32 @@ def get_bible_versions(api_key):
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
         return None
+
+import requests
+
+API_BASE_URL = "https://api.scripture.api"
+
+def get_translations():
+    response = requests.get(f"{API_BASE_URL}/v1/bibles")
+    if response.status_code == 200:
+        return response.json()['data']
+    return []
+
+def get_books(bible_id):
+    response = requests.get(f"{API_BASE_URL}/v1/bibles/{bible_id}/books")
+    if response.status_code == 200:
+        return response.json()['data']
+    return []
+
+def get_chapters(bible_id, book_id):
+    response = requests.get(f"{API_BASE_URL}/v1/bibles/{bible_id}/books/{book_id}/chapters")
+    if response.status_code == 200:
+        return response.json()['data']
+    return []
+
+def get_verses(bible_id, chapter_id):
+    response = requests.get(f"{API_BASE_URL}/v1/bibles/{bible_id}/chapters/{chapter_id}/verses")
+    if response.status_code == 200:
+        return response.json()['data']
+    return []
+
