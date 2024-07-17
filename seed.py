@@ -1,52 +1,65 @@
-from app import app
-from models import db, User, FavoriteVerse, Devotional, Category, Study
 from datetime import datetime
+from flask_bcrypt import Bcrypt
+from flask_sqlalchemy import SQLAlchemy
 
-def seed_data():
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
-        
-        # Creating users
-        user1 = User.signup(username="john_doe", email="john@example.com", password="password123", image_url="/static/images/john.png")
-        user2 = User.signup(username="jane_smith", email="jane@example.com", password="password456", image_url="/static/images/jane.png")
-        
-        db.session.commit()
-        
-        # Creating categories
-        category1 = Category(name="Inspiration", user_id=user1.id)
-        category2 = Category(name="Comfort", user_id=user2.id)
-        
-        db.session.add(category1)
-        db.session.add(category2)
-        db.session.commit()
-        
-        # Creating favorite verses
-        favorite_verse1 = FavoriteVerse(user_id=user1.id, bible_id="KJV", verse_id="John 3:16", category=category1.id, note="For God so loved the world...")
-        favorite_verse2 = FavoriteVerse(user_id=user2.id, bible_id="NIV", verse_id="Philippians 4:13", category=category2.id, note="I can do all this through him who gives me strength.")
-        
-        db.session.add(favorite_verse1)
-        db.session.add(favorite_verse2)
-        db.session.commit()
-        
-        # Creating devotionals
-        devotional1 = Devotional(user_id=user1.id, title="Morning Inspiration", content="Start your day with faith and prayer.", date=datetime(2024, 7, 15))
-        devotional2 = Devotional(user_id=user2.id, title="Evening Reflection", content="Reflect on the blessings of the day.", date=datetime(2024, 7, 14))
-        
-        db.session.add(devotional1)
-        db.session.add(devotional2)
-        db.session.commit()
-        
-        # Creating studies
-        study1 = Study(user_id=user1.id, title="Book of John Study", content="In-depth study on the Book of John.", link_to_document="http://example.com/john_study.pdf")
-        study2 = Study(user_id=user2.id, title="Philippians Study", content="Comprehensive guide on Philippians.", link_to_document="http://example.com/philippians_study.pdf")
-        
-        db.session.add(study1)
-        db.session.add(study2)
-        db.session.commit()
-        
-        print("Seed data created successfully.")
+bcrypt = Bcrypt()
+db = SQLAlchemy()
 
-# Run the seed function
-seed_data()
+# Your models definitions go here...
+
+# Seed data creation
+def create_seed_data():
+    # Create users
+    user1 = User.signup('user1', 'user1@example.com', 'password1', '/static/images/user1.png')
+    user2 = User.signup('user2', 'user2@example.com', 'password2', '/static/images/user2.png')
+    
+    # Commit users to the database
+    db.session.add_all([user1, user2])
+    db.session.commit()
+    
+    # Create categories
+    category1 = Category(name='Love')
+    category2 = Category(name='Faith')
+    category3 = Category(name='Hope')
+    
+    # Commit categories to the database
+    db.session.add_all([category1, category2, category3])
+    db.session.commit()
+    
+    # Create favorite verses with categories
+    verse1 = FavoriteVerse(bible_id='KJV', book_id='John', chapter_id='3', verse_start=16, verse_end=17, note='Famous verse', user_id=user1.id)
+    verse2 = FavoriteVerse(bible_id='ESV', book_id='Romans', chapter_id='8', verse_start=28, verse_end=30, note='Encouraging verse', user_id=user1.id)
+    verse3 = FavoriteVerse(bible_id='NIV', book_id='Galatians', chapter_id='2', verse_start=20, verse_end=21, note='Grace verse', user_id=user2.id)
+    
+    # Assign categories to verses
+    verse1.categories.append(category1)
+    verse1.categories.append(category2)
+    verse2.categories.append(category2)
+    verse2.categories.append(category3)
+    verse3.categories.append(category1)
+    
+    # Commit verses to the database
+    db.session.add_all([verse1, verse2, verse3])
+    db.session.commit()
+    
+    # Create messages with verses and categories
+    message1 = Message(title='Sermon on Love', content='Preaching about the importance of love.', user_id=user1.id, link_to_document='https://example.com/sermon1')
+    message2 = Message(title='Devotional on Faith', content='Encouraging devotion on faith.', user_id=user2.id, link_to_document='https://example.com/devotional1')
+    
+    # Assign verses and categories to messages
+    message1.verses.append(verse1)
+    message1.verses.append(verse2)
+    message1.categories.append(category1)
+    message1.categories.append(category2)
+    
+    message2.verses.append(verse3)
+    message2.categories.append(category1)
+    
+    # Commit messages to the database
+    db.session.add_all([message1, message2])
+    db.session.commit()
+
+# Run the seed data creation
+create_seed_data()
+
 
