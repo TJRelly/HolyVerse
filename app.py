@@ -1,21 +1,20 @@
-import os
+from os import environ
 
 from flask import Flask, jsonify, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 import requests
+
 from sqlalchemy.exc import IntegrityError
-from dotenv import load_dotenv
-from api import API_BASE_URL, get_bible_versions, get_translations, get_books, get_chapters, get_verses
+
+from api import API_BASE_URL, get_translations, get_books, get_chapters, get_verses
+
 from forms import SearchForm
 
 # from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
-from models import db, connect_db, User, FavoriteVerse, Devotional, Category 
-
-# Load environment variables from .env file
-load_dotenv()
+from models import db, connect_db, User, Favorite, Message, Category 
 
 # Access the environment variables
-API_KEY = os.getenv('API_KEY')
+API_KEY = environ.get('API_KEY')
 
 CURR_USER_KEY = "curr_user"
 
@@ -25,28 +24,25 @@ app.app_context().push()
 # # Get DB_URI from environ variable (useful for production/testing) or,
 # # if not set there, use development local db.
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgresql:///bible-app'))
+    environ.get('DATABASE_URL', 'postgresql:///bible-app'))
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
+app.config['SECRET_KEY'] = environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
 
 @app.route('/')
 def index():
-    versions = get_bible_versions(API_KEY)
-    if versions:
-        for version in versions:
-            print(version)
-    return "Check your console for Bible versions!"
+    versions = get_translations(API_KEY)
+    return render_template('home.html', versions=versions)
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     form = SearchForm()
-    translations = get_translations()
+    translations = get_translations(API_KEY)
     form.translation.choices = [(t['id'], f"{t['abbreviation']} - {t['name']}") for t in translations]
 
     if form.validate_on_submit():
